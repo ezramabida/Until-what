@@ -127,8 +127,7 @@ body {
 }
 
 #settingsPanel h3 {
-    margin: 0 0 15px 0;
-    font-size: 20px;
+    margin-bottom: 15px;
 }
 
 .setting {
@@ -139,7 +138,6 @@ body {
     font-size: 14px;
     display: block;
     margin-bottom: 5px;
-    opacity: 0.9;
 }
 
 .setting input {
@@ -149,7 +147,6 @@ body {
 #closeSettings {
     width: 100%;
     padding: 8px;
-    margin-top: 10px;
     border: none;
     cursor: pointer;
     font-family: 'CenturyGothic';
@@ -249,17 +246,31 @@ body {
     <button id="closeSettings">Close</button>
 </div>
 
+<!-- ================= GAME ================= -->
+<div id="gameScreen">
+    <div id="game">
+
+        <img id="background" src="scene 1 bg.gif">
+
+        <div id="dialogue-box">
+            <div id="name-box"></div>
+            <div id="text"></div>
+        </div>
+
+    </div>
+</div>
+
 <!-- ================= AUDIO ================= -->
 <audio id="menuMusic" src="menu.mp3" loop></audio>
 <audio id="sceneMusic" src="scene1.mp3" loop></audio>
 
 <script>
 
-/* ================= INTRO FADE ================= */
+/* ================= INTRO ================= */
 const intro = document.getElementById("introScreen");
 
 window.onload = () => {
-    intro.style.opacity = 1; // fade in intro
+    intro.style.opacity = 1;
 };
 
 function enterMenu() {
@@ -286,34 +297,74 @@ let audioSettings = {
 
 /* ================= SETTINGS ================= */
 function openSettings() {
-    const panel = document.getElementById("settingsPanel");
-    panel.style.display = "block";
+    document.getElementById("settingsPanel").style.display = "block";
 
     document.getElementById("music").value = audioSettings.music;
     document.getElementById("ambience").value = audioSettings.ambience;
     document.getElementById("sfx").value = audioSettings.sfx;
 }
 
-/* live update */
 document.getElementById("music").oninput = (e) => {
     audioSettings.music = e.target.value;
     menuMusic.volume = audioSettings.music;
     sceneMusic.volume = audioSettings.music;
 };
 
-document.getElementById("ambience").oninput = (e) => {
-    audioSettings.ambience = e.target.value;
-};
-
-document.getElementById("sfx").oninput = (e) => {
-    audioSettings.sfx = e.target.value;
-};
-
 document.getElementById("closeSettings").onclick = () => {
     document.getElementById("settingsPanel").style.display = "none";
 };
 
-/* ================= START GAME ================= */
+/* ================= VN SYSTEM ================= */
+
+const gameData = {
+    scene1: {
+        background: "scene 1 bg.gif",
+        dialogues: [
+            {
+                character: "Niña",
+                text: "Pogi lagi kaayo si Ezra noh?"
+            }
+        ]
+    }
+};
+
+let currentScene = "scene1";
+let dialogueIndex = 0;
+
+const bg = document.getElementById("background");
+const textBox = document.getElementById("text");
+const nameBox = document.getElementById("name-box");
+
+/* ================= LOAD SCENE ================= */
+function loadScene(sceneName) {
+    currentScene = sceneName;
+    dialogueIndex = 0;
+
+    bg.src = gameData[sceneName].background;
+    nextDialogue();
+}
+
+/* ================= DIALOGUE ================= */
+function typeText(text, i = 0) {
+    if (i < text.length) {
+        textBox.innerHTML += text.charAt(i);
+        setTimeout(() => typeText(text, i + 1), 20);
+    }
+}
+
+function nextDialogue() {
+    const scene = gameData[currentScene];
+    const dialogue = scene.dialogues[dialogueIndex];
+
+    if (!dialogue) return;
+
+    textBox.innerHTML = "";
+    nameBox.innerText = dialogue.character;
+
+    typeText(dialogue.text);
+}
+
+/* ================= START GAME (FIXED) ================= */
 function startGame() {
 
     const fade = document.getElementById("fade");
@@ -326,6 +377,9 @@ function startGame() {
 
         document.getElementById("menuScreen").style.display = "none";
         document.getElementById("gameScreen").style.display = "block";
+
+        // ✅ THIS FIXES YOUR ISSUE
+        loadScene("scene1");
 
         sceneMusic.volume = audioSettings.music;
         sceneMusic.play();
