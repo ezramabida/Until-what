@@ -8,13 +8,13 @@
 
 /* ================= FONTS ================= */
 @font-face {
-    font-family: 'ThisAppeal';
-    src: url('ThisAppeal-FreeDemo.ttf') format('truetype');
+    font-family: 'CenturyGothic';
+    src: url('centurygothic.ttf') format('truetype');
 }
 
 @font-face {
-    font-family: 'CenturyGothic';
-    src: url('centurygothic.ttf') format('truetype');
+    font-family: 'ThisAppeal';
+    src: url('ThisAppeal-FreeDemo.ttf') format('truetype');
 }
 
 @font-face {
@@ -22,7 +22,7 @@
     src: url('DiarioDeAndy-L3ADy.otf') format('opentype');
 }
 
-/* ================= BASE ================= */
+/* ================= GLOBAL ================= */
 body {
     margin: 0;
     background: black;
@@ -30,14 +30,41 @@ body {
     height: 100vh;
 }
 
-/* ================= SCREENS ================= */
-.screen {
+/* ================= INTRO ================= */
+#introScreen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    color: white;
+    font-family: 'CenturyGothic';
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+#introText {
+    font-size: 28px;
+}
+
+#clickText {
+    position: absolute;
+    bottom: 40px;
+    font-size: 14px;
+    font-style: italic;
+    opacity: 0.7;
+}
+
+/* ================= MENU ================= */
+#menuScreen {
+    display: none;
     position: absolute;
     width: 100%;
     height: 100%;
 }
 
-/* ================= MENU ================= */
 #menuBg {
     width: 100%;
     height: 100%;
@@ -165,8 +192,14 @@ body {
 <!-- FADE -->
 <div id="fade"></div>
 
+<!-- ================= INTRO ================= -->
+<div id="introScreen" onclick="enterMenu()">
+    <div id="introText">Only a fictional story</div>
+    <div id="clickText">(click anywhere)</div>
+</div>
+
 <!-- ================= MENU ================= -->
-<div id="menuScreen" class="screen">
+<div id="menuScreen">
     <img id="menuBg" src="menu.gif">
 
     <div id="title">LAST WEEK</div>
@@ -178,8 +211,7 @@ body {
 </div>
 
 <!-- ================= GAME ================= -->
-<div id="gameScreen" class="screen">
-
+<div id="gameScreen">
     <div id="game">
 
         <img id="background" src="scene 1 bg.gif">
@@ -203,108 +235,23 @@ body {
 
 <script>
 
-/* ================= AUDIO SETTINGS ================= */
+/* ================= AUDIO ================= */
+const menuMusic = document.getElementById("menuMusic");
+const sceneMusic = document.getElementById("sceneMusic");
+
 let audioSettings = {
     music: 0.6,
     ambience: 0.4,
     sfx: 0.7
 };
 
-const menuMusic = document.getElementById("menuMusic");
-const sceneMusic = document.getElementById("sceneMusic");
-
-let musicStarted = false;
-
-/* ================= SAFE MUSIC START ================= */
-function startMenuMusic() {
-    if (musicStarted) return;
+/* ================= INTRO → MENU ================= */
+function enterMenu() {
+    document.getElementById("introScreen").style.display = "none";
+    document.getElementById("menuScreen").style.display = "block";
 
     menuMusic.volume = audioSettings.music;
     menuMusic.play().catch(() => {});
-    musicStarted = true;
-}
-
-/* start music on first user interaction */
-document.addEventListener("click", startMenuMusic, { once: true });
-
-/* ================= APPLY VOLUME ================= */
-function applyMusicVolume() {
-    menuMusic.volume = audioSettings.music;
-    sceneMusic.volume = audioSettings.music;
-}
-
-/* ================= FADE AUDIO ================= */
-function fadeAudio(audio, targetVolume, duration, callback) {
-    const step = 50;
-    const steps = duration / step;
-    const change = (targetVolume - audio.volume) / steps;
-
-    let count = 0;
-
-    const interval = setInterval(() => {
-        audio.volume = Math.max(0, Math.min(1, audio.volume + change));
-        count++;
-
-        if (count >= steps) {
-            clearInterval(interval);
-            audio.volume = targetVolume;
-            if (callback) callback();
-        }
-    }, step);
-}
-
-/* ================= SETTINGS ================= */
-function openSettings() {
-
-    const panel = document.createElement("div");
-
-    panel.style.position = "absolute";
-    panel.style.top = "50%";
-    panel.style.left = "50%";
-    panel.style.transform = "translate(-50%, -50%)";
-    panel.style.background = "rgba(0,0,0,0.9)";
-    panel.style.color = "white";
-    panel.style.padding = "20px";
-    panel.style.width = "300px";
-    panel.style.zIndex = "1000";
-
-    panel.innerHTML = `
-        <h3>SETTINGS</h3>
-
-        <label>Music</label><br>
-        <input id="music" type="range" min="0" max="1" step="0.01" value="${audioSettings.music}">
-
-        <br><br>
-
-        <label>Ambience</label><br>
-        <input id="ambience" type="range" min="0" max="1" step="0.01" value="${audioSettings.ambience}">
-
-        <br><br>
-
-        <label>SFX</label><br>
-        <input id="sfx" type="range" min="0" max="1" step="0.01" value="${audioSettings.sfx}">
-
-        <br><br>
-
-        <button id="close">Close</button>
-    `;
-
-    document.body.appendChild(panel);
-
-    document.getElementById("music").oninput = (e) => {
-        audioSettings.music = parseFloat(e.target.value);
-        applyMusicVolume();
-    };
-
-    document.getElementById("ambience").oninput = (e) => {
-        audioSettings.ambience = parseFloat(e.target.value);
-    };
-
-    document.getElementById("sfx").oninput = (e) => {
-        audioSettings.sfx = parseFloat(e.target.value);
-    };
-
-    document.getElementById("close").onclick = () => panel.remove();
 }
 
 /* ================= START GAME ================= */
@@ -321,16 +268,17 @@ function startGame() {
         document.getElementById("menuScreen").style.display = "none";
         document.getElementById("gameScreen").style.display = "block";
 
-        loadScene("scene1");
-
-        sceneMusic.volume = 0;
+        sceneMusic.volume = audioSettings.music;
         sceneMusic.play();
-
-        fadeAudio(sceneMusic, audioSettings.music, 1500);
 
         fade.style.opacity = 0;
 
     }, 2000);
+}
+
+/* ================= SETTINGS ================= */
+function openSettings() {
+    alert("Settings system can be upgraded into full slider UI later.");
 }
 
 /* ================= VN SYSTEM ================= */
@@ -379,7 +327,7 @@ const textBox = document.getElementById("text");
 const nameBox = document.getElementById("name-box");
 const choicesDiv = document.getElementById("choices");
 
-/* LOAD */
+/* LOAD SCENE */
 function loadScene(sceneName) {
     currentScene = sceneName;
     dialogueIndex = 0;
@@ -387,7 +335,7 @@ function loadScene(sceneName) {
     nextDialogue();
 }
 
-/* TYPE */
+/* TYPE TEXT */
 function typeText(text, i = 0) {
     if (i < text.length) {
         textBox.innerHTML += text.charAt(i);
@@ -395,7 +343,7 @@ function typeText(text, i = 0) {
     }
 }
 
-/* SHOW */
+/* SHOW DIALOGUE */
 function showDialogue(d) {
     textBox.innerHTML = "";
     nameBox.innerText = d.character;
@@ -454,7 +402,7 @@ function showChoices(choices) {
     });
 }
 
-/* CLICK */
+/* CLICK ANYWHERE */
 document.addEventListener("click", () => {
     if (state === "choices" && pendingChoices) {
         showChoices(pendingChoices);
