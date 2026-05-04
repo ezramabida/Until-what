@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Last Week</title>
+
+<style>
+
+/* =========================
+   FONTS
+========================= */
+@font-face {
+    font-family: 'ThisAppeal';
+    src: url('ThisAppeal-FreeDemo.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'CenturyGothic';
+    src: url('centurygothic.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'DiarioDeAndy';
+    src: url('DiarioDeAndy-L3ADy.otf') format('opentype');
+}
+
+/* =========================
+   BASE
+========================= */
+body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* =========================
+   SCREENS
+========================= */
+.screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+/* =========================
+   MENU
+========================= */
+#menuBg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#title {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    font-family: 'ThisAppeal';
+    font-size: 90px;
+    color: black;
+    text-transform: uppercase;
+}
+
+#menu {
+    position: absolute;
+    bottom: 80px;
+    left: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.option {
+    font-family: 'CenturyGothic';
+    font-size: 28px;
+    color: black;
+    cursor: pointer;
+}
+
+/* =========================
+   FADE SCREEN (IMPORTANT)
+========================= */
+#fade {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+    z-index: 999;
+}
+
+/* =========================
+   GAME
+========================= */
+#gameScreen {
+    display: none;
+}
+
+#game {
+    width: 960px;
+    height: 540px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+    font-family: 'DiarioDeAndy', Arial;
+}
+
+#background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* CHARACTERS */
+.character {
+    position: absolute;
+    bottom: 40px;
+    width: 320px;
+    height: 320px;
+    object-fit: cover;
+}
+
+.left { left: 30px; }
+.right { right: 30px; }
+
+/* DIALOGUE */
+#dialogue-box {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
+    max-width: 820px;
+    height: 130px;
+    background: rgba(0,0,0,0.7);
+    padding: 15px;
+    box-sizing: border-box;
+    border-radius: 8px;
+}
+
+#name-box {
+    position: absolute;
+    top: -25px;
+    left: 15px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.8);
+    font-size: 16px;
+    padding: 5px 10px;
+}
+
+#text {
+    color: white;
+    margin-top: 10px;
+    font-size: 18px;
+}
+
+/* CHOICES */
+#choices {
+    position: absolute;
+    bottom: 160px;
+    width: 100%;
+    display: none;
+    text-align: center;
+}
+
+.choice {
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 10px 14px;
+    margin: 8px auto;
+    width: 38%;
+    min-width: 240px;
+    max-width: 360px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- FADE OVERLAY -->
+<div id="fade"></div>
+
+<!-- =========================
+     MENU
+========================= -->
+<div id="menuScreen" class="screen">
+    <img id="menuBg" src="menu.gif">
+
+    <div id="title">LAST WEEK</div>
+
+    <div id="menu">
+        <div class="option" onclick="startGame()">PLAY</div>
+        <div class="option" onclick="openSettings()">SETTINGS</div>
+    </div>
+</div>
+
+<!-- =========================
+     GAME
+========================= -->
+<div id="gameScreen" class="screen">
+
+    <div id="game">
+
+        <img id="background" src="scene 1 bg.gif">
+
+        <img id="char-left" class="character left" src="char_vin.png">
+        <img id="char-right" class="character right" src="char_nina_placeholder.png">
+
+        <div id="choices"></div>
+
+        <div id="dialogue-box">
+            <div id="name-box"></div>
+            <div id="text"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+/* =========================
+   FADE TRANSITION
+========================= */
+function fadeToGame() {
+    const fade = document.getElementById("fade");
+
+    fade.style.opacity = 1; // fade to black
+
+    setTimeout(() => {
+        document.getElementById("menuScreen").style.display = "none";
+        document.getElementById("gameScreen").style.display = "block";
+
+        loadScene("scene1");
+
+        fade.style.opacity = 0; // fade back in
+    }, 2000); // 2 seconds total
+}
+
+/* =========================
+   MENU ACTIONS
+========================= */
+function startGame() {
+    fadeToGame();
+}
+
+function openSettings() {
+    alert("Settings coming soon.");
+}
+
+/* =========================
+   VN SYSTEM
+========================= */
+
+const characters = {
+    "Vin": { color: "#4da6ff" },
+    "Niña": { color: "#ffb6c1" }
+};
+
+const gameData = {
+    scene1: {
+        background: "scene 1 bg.gif",
+        dialogues: [
+            {
+                character: "Niña",
+                position: "right",
+                text: "Pogi lagi kaayo si Ezra noh?",
+                choices: [
+                    {
+                        text: "Sobra ka pogi.",
+                        reply: {
+                            character: "Vin",
+                            text: "Of course. No debate."
+                        }
+                    },
+                    {
+                        text: "Ganii.",
+                        reply: {
+                            character: "Vin",
+                            text: "True. That’s just facts."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+};
+
+let currentScene = "scene1";
+let dialogueIndex = 0;
+let state = "dialogue";
+let pendingChoices = null;
+let pendingReply = null;
+
+/* ELEMENTS */
+const bg = document.getElementById("background");
+const textBox = document.getElementById("text");
+const nameBox = document.getElementById("name-box");
+const choicesDiv = document.getElementById("choices");
+
+/* LOAD */
+function loadScene(sceneName) {
+    currentScene = sceneName;
+    dialogueIndex = 0;
+    bg.src = gameData[sceneName].background;
+    nextDialogue();
+}
+
+/* TYPE */
+function typeText(text, i = 0) {
+    if (i < text.length) {
+        textBox.innerHTML += text.charAt(i);
+        setTimeout(() => typeText(text, i + 1), 20);
+    }
+}
+
+/* SHOW */
+function showDialogue(d) {
+    textBox.innerHTML = "";
+    nameBox.innerText = d.character;
+    nameBox.style.color = characters[d.character]?.color || "white";
+    typeText(d.text);
+}
+
+/* FLOW */
+function nextDialogue() {
+
+    if (state === "reply" && pendingReply) {
+        state = "dialogue";
+        showDialogue(pendingReply);
+        pendingReply = null;
+        return;
+    }
+
+    const scene = gameData[currentScene];
+    const dialogue = scene.dialogues[dialogueIndex];
+
+    if (!dialogue) return;
+
+    showDialogue(dialogue);
+
+    if (dialogue.choices) {
+        pendingChoices = dialogue.choices;
+        state = "choices";
+    }
+}
+
+/* CHOICES */
+function showChoices(choices) {
+    choicesDiv.innerHTML = "";
+    choicesDiv.style.display = "block";
+
+    choices.forEach(c => {
+        const btn = document.createElement("div");
+        btn.className = "choice";
+        btn.innerText = c.text;
+
+        btn.onclick = (e) => {
+            e.stopPropagation();
+
+            choicesDiv.style.display = "none";
+
+            showDialogue({
+                character: "Vin",
+                text: c.text
+            });
+
+            pendingReply = c.reply;
+            state = "reply";
+        };
+
+        choicesDiv.appendChild(btn);
+    });
+}
+
+/* CLICK ANYWHERE */
+document.addEventListener("click", () => {
+
+    if (state === "choices" && pendingChoices) {
+        showChoices(pendingChoices);
+        pendingChoices = null;
+        return;
+    }
+
+    nextDialogue();
+});
+
+</script>
+
+</body>
+</html>
