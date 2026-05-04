@@ -134,9 +134,6 @@ const characters = {
     "Niña": { color: "#ffb6c1" }
 };
 
-/* =========================
-   GAME DATA
-========================= */
 const gameData = {
     scene1: {
         background: "bg_classroom.png",
@@ -149,58 +146,34 @@ const gameData = {
                 choices: [
                     {
                         text: "Sobra ka pogi.",
-                        next: "scene2",
-                        effect: () => vars.friendship += 1
+                        reply: {
+                            character: "Vin",
+                            position: "right",
+                            sprite: "char_vin.png",
+                            text: "Of course. No debate."
+                        }
                     },
                     {
                         text: "Ganii.",
-                        next: "scene3",
-                        effect: () => vars.friendship -= 1
+                        reply: {
+                            character: "Vin",
+                            position: "right",
+                            sprite: "char_vin.png",
+                            text: "True. That’s just facts."
+                        }
                     }
                 ]
-            }
-        ]
-    },
-
-    scene2: {
-        background: "bg_classroom.png",
-        dialogues: [
-            {
-                character: "Niña",
-                position: "left",
-                sprite: "char_nina.png",
-                text: "Faxxx Eyyyy."
-            }
-        ]
-    },
-
-    scene3: {
-        background: "bg_school.png",
-        dialogues: [
-            {
-                character: "Niña",
-                position: "right",
-                sprite: "char_nina.png",
-                text: "You can tell me what's wrong..."
             }
         ]
     }
 };
 
-/* =========================
-   VARIABLES
-========================= */
 let currentScene = "scene1";
 let dialogueIndex = 0;
-let pendingScene = null;
 
-let vars = {
-    friendship: 0
-};
+let pendingReply = null;
+let waitingForReply = false;
 
-/* =========================
-   ELEMENTS
-========================= */
 const bg = document.getElementById("background");
 const textBox = document.getElementById("text");
 const nameBox = document.getElementById("name-box");
@@ -213,9 +186,7 @@ const chars = {
     right: document.getElementById("char-right")
 };
 
-/* =========================
-   FUNCTIONS
-========================= */
+/* LOAD SCENE */
 function loadScene(sceneName) {
     currentScene = sceneName;
     dialogueIndex = 0;
@@ -226,18 +197,19 @@ function loadScene(sceneName) {
     nextDialogue();
 }
 
+/* SHOW CHARACTER */
 function showCharacter(position, sprite) {
     for (let pos in chars) {
         chars[pos].style.display = "none";
     }
 
     if (position && sprite) {
-        const char = chars[position];
-        char.src = sprite;
-        char.style.display = "block";
+        chars[position].src = sprite;
+        chars[position].style.display = "block";
     }
 }
 
+/* TYPE TEXT */
 function typeText(text, i = 0) {
     if (i < text.length) {
         textBox.innerHTML += text.charAt(i);
@@ -245,13 +217,24 @@ function typeText(text, i = 0) {
     }
 }
 
+/* SHOW DIALOGUE */
+function showDialogue(dialogue) {
+    textBox.innerHTML = "";
+    nameBox.innerText = dialogue.character;
+    nameBox.style.color = characters[dialogue.character]?.color || "white";
+
+    showCharacter(dialogue.position, dialogue.sprite);
+    typeText(dialogue.text);
+}
+
+/* MAIN FLOW */
 function nextDialogue() {
 
-    // 🔥 Handle delayed scene switch
-    if (pendingScene) {
-        const next = pendingScene;
-        pendingScene = null;
-        loadScene(next);
+    // If waiting for Niña reply after Vin speaks
+    if (waitingForReply && pendingReply) {
+        waitingForReply = false;
+        showDialogue(pendingReply);
+        pendingReply = null;
         return;
     }
 
@@ -260,19 +243,14 @@ function nextDialogue() {
 
     if (!dialogue) return;
 
-    textBox.innerHTML = "";
-
-    nameBox.innerText = dialogue.character || "";
-    nameBox.style.color = characters[dialogue.character]?.color || "white";
-
-    showCharacter(dialogue.position, dialogue.sprite);
-    typeText(dialogue.text);
+    showDialogue(dialogue);
 
     if (dialogue.choices) {
         showChoices(dialogue.choices);
     }
 }
 
+/* CHOICES */
 function showChoices(choices) {
     choicesDiv.innerHTML = "";
     choicesDiv.style.display = "block";
@@ -284,36 +262,32 @@ function showChoices(choices) {
         btn.innerText = choice.text;
 
         btn.onclick = () => {
-            if (choice.effect) choice.effect();
-
             choicesDiv.style.display = "none";
             dialogueBox.style.pointerEvents = "auto";
 
-            // ✅ SHOW PLAYER RESPONSE FIRST
-            textBox.innerHTML = "";
-            nameBox.innerText = "Vin";
-            nameBox.style.color = characters["Vin"].color;
+            // Vin responds first
+            showDialogue({
+                character: "Vin",
+                position: "right",
+                sprite: "char_vin.png",
+                text: choice.text
+            });
 
-            typeText(choice.text);
-
-            pendingScene = choice.next;
+            // store Niña reply
+            pendingReply = choice.reply;
+            waitingForReply = true;
         };
 
         choicesDiv.appendChild(btn);
     });
 }
 
+/* CLICK ANYWHERE TO CONTINUE */
 dialogueBox.addEventListener("click", () => {
-    const scene = gameData[currentScene];
-    const dialogue = scene.dialogues[dialogueIndex];
-
-    if (dialogue && dialogue.choices) return;
-
-    dialogueIndex++;
     nextDialogue();
 });
 
-/* START */
+/* START GAME */
 loadScene("scene1");
 
 </script>
