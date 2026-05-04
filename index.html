@@ -27,6 +27,7 @@ body {
     margin: 0;
     background: black;
     overflow: hidden;
+    height: 100vh;
 }
 
 /* ================= INTRO ================= */
@@ -38,12 +39,14 @@ body {
     color: white;
     font-family: 'CenturyGothic';
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
     cursor: pointer;
-    opacity: 0;
-    transition: opacity 1.2s ease;
+}
+
+#introText {
+    font-size: 28px;
 }
 
 #clickText {
@@ -77,9 +80,19 @@ body {
     color: black;
 }
 
+#menu {
+    position: absolute;
+    bottom: 80px;
+    left: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
 .option {
     font-family: 'CenturyGothic';
     font-size: 28px;
+    color: black;
     cursor: pointer;
 }
 
@@ -91,7 +104,7 @@ body {
     background: black;
     opacity: 0;
     pointer-events: none;
-    transition: 1s;
+    transition: opacity 1s ease;
     z-index: 999;
 }
 
@@ -107,7 +120,7 @@ body {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    font-family: 'DiarioDeAndy';
+    font-family: 'DiarioDeAndy', Arial;
 }
 
 #background {
@@ -116,7 +129,18 @@ body {
     height: 100%;
 }
 
-/* ================= DIALOGUE ================= */
+/* CHARACTERS */
+.character {
+    position: absolute;
+    bottom: 40px;
+    width: 320px;
+    height: 320px;
+}
+
+.left { left: 30px; }
+.right { right: 30px; }
+
+/* DIALOGUE */
 #dialogue-box {
     position: absolute;
     bottom: 20px;
@@ -126,7 +150,6 @@ body {
     height: 130px;
     background: rgba(0,0,0,0.7);
     padding: 15px;
-    color: white;
 }
 
 #name-box {
@@ -138,14 +161,14 @@ body {
 }
 
 #text {
-    margin-top: 10px;
     color: white;
+    margin-top: 10px;
 }
 
-/* ================= CHOICES ================= */
+/* CHOICES */
 #choices {
     position: absolute;
-    bottom: 170px;
+    bottom: 160px;
     width: 100%;
     display: none;
     text-align: center;
@@ -158,6 +181,7 @@ body {
     margin: 8px auto;
     width: 40%;
     cursor: pointer;
+    border-radius: 6px;
 }
 
 </style>
@@ -165,31 +189,35 @@ body {
 
 <body>
 
+<!-- FADE -->
 <div id="fade"></div>
 
-<!-- INTRO -->
+<!-- ================= INTRO ================= -->
 <div id="introScreen" onclick="enterMenu()">
-    <div>Only a fictional story</div>
+    <div id="introText">Only a fictional story</div>
     <div id="clickText">(click anywhere)</div>
 </div>
 
-<!-- MENU -->
+<!-- ================= MENU ================= -->
 <div id="menuScreen">
     <img id="menuBg" src="menu.gif">
 
     <div id="title">LAST WEEK</div>
 
-    <div style="position:absolute;bottom:80px;left:40px;">
+    <div id="menu">
         <div class="option" onclick="startGame()">PLAY</div>
         <div class="option" onclick="openSettings()">SETTINGS</div>
     </div>
 </div>
 
-<!-- GAME -->
+<!-- ================= GAME ================= -->
 <div id="gameScreen">
     <div id="game">
 
         <img id="background" src="scene 1 bg.gif">
+
+        <img class="character left" src="char_vin.png">
+        <img class="character right" src="char_nina_placeholder.png">
 
         <div id="choices"></div>
 
@@ -201,7 +229,7 @@ body {
     </div>
 </div>
 
-<!-- AUDIO -->
+<!-- ================= AUDIO ================= -->
 <audio id="menuMusic" src="menu.mp3" loop></audio>
 <audio id="sceneMusic" src="scene1.mp3" loop></audio>
 
@@ -211,30 +239,53 @@ body {
 const menuMusic = document.getElementById("menuMusic");
 const sceneMusic = document.getElementById("sceneMusic");
 
-let audioSettings = { music: 0.6 };
-
-/* ================= INTRO ================= */
-window.onload = () => {
-    document.getElementById("introScreen").style.opacity = 1;
+let audioSettings = {
+    music: 0.6,
+    ambience: 0.4,
+    sfx: 0.7
 };
 
+/* ================= INTRO → MENU ================= */
 function enterMenu() {
-    const intro = document.getElementById("introScreen");
-    intro.style.opacity = 0;
+    document.getElementById("introScreen").style.display = "none";
+    document.getElementById("menuScreen").style.display = "block";
 
-    setTimeout(() => {
-        intro.style.display = "none";
-        document.getElementById("menuScreen").style.display = "block";
-
-        menuMusic.volume = audioSettings.music;
-        menuMusic.play().catch(()=>{});
-    }, 1200);
+    menuMusic.volume = audioSettings.music;
+    menuMusic.play().catch(() => {});
 }
 
-/* ================= VN DATA ================= */
+/* ================= START GAME ================= */
+function startGame() {
+
+    const fade = document.getElementById("fade");
+    fade.style.opacity = 1;
+
+    menuMusic.pause();
+    menuMusic.currentTime = 0;
+
+    setTimeout(() => {
+
+        document.getElementById("menuScreen").style.display = "none";
+        document.getElementById("gameScreen").style.display = "block";
+
+        sceneMusic.volume = audioSettings.music;
+        sceneMusic.play();
+
+        fade.style.opacity = 0;
+
+    }, 2000);
+}
+
+/* ================= SETTINGS ================= */
+function openSettings() {
+    alert("Settings system can be upgraded into full slider UI later.");
+}
+
+/* ================= VN SYSTEM ================= */
+
 const characters = {
-    "Vin": "#4da6ff",
-    "Niña": "#ffb6c1"
+    "Vin": { color: "#4da6ff" },
+    "Niña": { color: "#ffb6c1" }
 };
 
 const gameData = {
@@ -265,124 +316,102 @@ const gameData = {
     }
 };
 
-/* ================= STATE ================= */
 let currentScene = "scene1";
-let index = 0;
+let dialogueIndex = 0;
 let state = "dialogue";
 let pendingChoices = null;
 let pendingReply = null;
 
-/* ================= ELEMENTS ================= */
 const bg = document.getElementById("background");
 const textBox = document.getElementById("text");
 const nameBox = document.getElementById("name-box");
 const choicesDiv = document.getElementById("choices");
 
-/* ================= LOAD SCENE ================= */
-function loadScene(name) {
-    currentScene = name;
-    index = 0;
-    bg.src = gameData[name].background;
-    next();
+/* LOAD SCENE */
+function loadScene(sceneName) {
+    currentScene = sceneName;
+    dialogueIndex = 0;
+    bg.src = gameData[sceneName].background;
+    nextDialogue();
 }
 
-/* ================= TEXT ================= */
-function type(text, i=0){
-    if(i < text.length){
-        textBox.innerHTML += text[i];
-        setTimeout(()=>type(text,i+1),20);
+/* TYPE TEXT */
+function typeText(text, i = 0) {
+    if (i < text.length) {
+        textBox.innerHTML += text.charAt(i);
+        setTimeout(() => typeText(text, i + 1), 20);
     }
 }
 
-/* ================= SHOW ================= */
-function show(d){
+/* SHOW DIALOGUE */
+function showDialogue(d) {
     textBox.innerHTML = "";
     nameBox.innerText = d.character;
-    nameBox.style.color = characters[d.character] || "white";
-    type(d.text);
+    nameBox.style.color = characters[d.character]?.color || "white";
+    typeText(d.text);
 }
 
-/* ================= NEXT ================= */
-function next(){
+/* FLOW */
+function nextDialogue() {
 
-    if(state === "reply" && pendingReply){
+    if (state === "reply" && pendingReply) {
         state = "dialogue";
-        show(pendingReply);
+        showDialogue(pendingReply);
         pendingReply = null;
         return;
     }
 
-    const d = gameData[currentScene].dialogues[index];
-    if(!d) return;
+    const scene = gameData[currentScene];
+    const dialogue = scene.dialogues[dialogueIndex];
 
-    show(d);
+    if (!dialogue) return;
 
-    if(d.choices){
-        pendingChoices = d.choices;
+    showDialogue(dialogue);
+
+    if (dialogue.choices) {
+        pendingChoices = dialogue.choices;
         state = "choices";
     }
 }
 
-/* ================= CHOICES ================= */
-function showChoices(list){
+/* CHOICES */
+function showChoices(choices) {
     choicesDiv.innerHTML = "";
     choicesDiv.style.display = "block";
 
-    list.forEach(c=>{
-        const b = document.createElement("div");
-        b.className = "choice";
-        b.innerText = c.text;
+    choices.forEach(c => {
+        const btn = document.createElement("div");
+        btn.className = "choice";
+        btn.innerText = c.text;
 
-        b.onclick = (e)=>{
+        btn.onclick = (e) => {
             e.stopPropagation();
 
             choicesDiv.style.display = "none";
 
-            show({character:"Vin", text:c.text});
+            showDialogue({
+                character: "Vin",
+                text: c.text
+            });
 
             pendingReply = c.reply;
             state = "reply";
         };
 
-        choicesDiv.appendChild(b);
+        choicesDiv.appendChild(btn);
     });
 }
 
-/* ================= CLICK ANYWHERE ================= */
-document.addEventListener("click", ()=>{
-
-    if(state === "choices" && pendingChoices){
+/* CLICK ANYWHERE */
+document.addEventListener("click", () => {
+    if (state === "choices" && pendingChoices) {
         showChoices(pendingChoices);
         pendingChoices = null;
         return;
     }
 
-    next();
+    nextDialogue();
 });
-
-/* ================= START GAME ================= */
-function startGame(){
-
-    const fade = document.getElementById("fade");
-    fade.style.opacity = 1;
-
-    menuMusic.pause();
-    menuMusic.currentTime = 0;
-
-    setTimeout(()=>{
-
-        document.getElementById("menuScreen").style.display = "none";
-        document.getElementById("gameScreen").style.display = "block";
-
-        loadScene("scene1"); // ✅ FIXED CORE ISSUE
-
-        sceneMusic.volume = audioSettings.music;
-        sceneMusic.play();
-
-        fade.style.opacity = 0;
-
-    },2000);
-}
 
 </script>
 
