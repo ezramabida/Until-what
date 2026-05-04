@@ -43,6 +43,8 @@ body {
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    opacity: 0;
+    transition: opacity 1.5s ease;
 }
 
 #introText {
@@ -108,6 +110,53 @@ body {
     z-index: 999;
 }
 
+/* ================= SETTINGS (CLEAN UI) ================= */
+#settingsPanel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.85);
+    padding: 20px 25px;
+    width: 320px;
+    border-radius: 10px;
+    font-family: 'CenturyGothic';
+    color: white;
+    display: none;
+    z-index: 1000;
+}
+
+#settingsPanel h3 {
+    margin: 0 0 15px 0;
+    font-size: 20px;
+    letter-spacing: 1px;
+}
+
+.setting-row {
+    margin-bottom: 15px;
+}
+
+.setting-row label {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 5px;
+    opacity: 0.9;
+}
+
+.setting-row input {
+    width: 100%;
+}
+
+#closeSettings {
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px;
+    background: white;
+    border: none;
+    cursor: pointer;
+    font-family: 'CenturyGothic';
+}
+
 /* ================= GAME ================= */
 #gameScreen {
     display: none;
@@ -128,17 +177,6 @@ body {
     width: 100%;
     height: 100%;
 }
-
-/* CHARACTERS */
-.character {
-    position: absolute;
-    bottom: 40px;
-    width: 320px;
-    height: 320px;
-}
-
-.left { left: 30px; }
-.right { right: 30px; }
 
 /* DIALOGUE */
 #dialogue-box {
@@ -163,25 +201,6 @@ body {
 #text {
     color: white;
     margin-top: 10px;
-}
-
-/* CHOICES */
-#choices {
-    position: absolute;
-    bottom: 160px;
-    width: 100%;
-    display: none;
-    text-align: center;
-}
-
-.choice {
-    background: rgba(0,0,0,0.85);
-    color: white;
-    padding: 10px;
-    margin: 8px auto;
-    width: 40%;
-    cursor: pointer;
-    border-radius: 6px;
 }
 
 </style>
@@ -210,23 +229,26 @@ body {
     </div>
 </div>
 
-<!-- ================= GAME ================= -->
-<div id="gameScreen">
-    <div id="game">
+<!-- ================= SETTINGS ================= -->
+<div id="settingsPanel">
+    <h3>SETTINGS</h3>
 
-        <img id="background" src="scene 1 bg.gif">
-
-        <img class="character left" src="char_vin.png">
-        <img class="character right" src="char_nina_placeholder.png">
-
-        <div id="choices"></div>
-
-        <div id="dialogue-box">
-            <div id="name-box"></div>
-            <div id="text"></div>
-        </div>
-
+    <div class="setting-row">
+        <label>Music</label>
+        <input id="music" type="range" min="0" max="1" step="0.01">
     </div>
+
+    <div class="setting-row">
+        <label>Ambience</label>
+        <input id="ambience" type="range" min="0" max="1" step="0.01">
+    </div>
+
+    <div class="setting-row">
+        <label>SFX</label>
+        <input id="sfx" type="range" min="0" max="1" step="0.01">
+    </div>
+
+    <button id="closeSettings">Close</button>
 </div>
 
 <!-- ================= AUDIO ================= -->
@@ -234,6 +256,26 @@ body {
 <audio id="sceneMusic" src="scene1.mp3" loop></audio>
 
 <script>
+
+/* ================= INTRO FADE ================= */
+const intro = document.getElementById("introScreen");
+
+window.onload = () => {
+    intro.style.opacity = 1; // fade in
+};
+
+function enterMenu() {
+
+    intro.style.opacity = 0; // fade out
+
+    setTimeout(() => {
+        intro.style.display = "none";
+        document.getElementById("menuScreen").style.display = "block";
+
+        menuMusic.volume = 0.6;
+        menuMusic.play().catch(() => {});
+    }, 1500);
+}
 
 /* ================= AUDIO ================= */
 const menuMusic = document.getElementById("menuMusic");
@@ -245,14 +287,34 @@ let audioSettings = {
     sfx: 0.7
 };
 
-/* ================= INTRO → MENU ================= */
-function enterMenu() {
-    document.getElementById("introScreen").style.display = "none";
-    document.getElementById("menuScreen").style.display = "block";
+/* ================= SETTINGS ================= */
+function openSettings() {
+    const panel = document.getElementById("settingsPanel");
+    panel.style.display = "block";
 
-    menuMusic.volume = audioSettings.music;
-    menuMusic.play().catch(() => {});
+    document.getElementById("music").value = audioSettings.music;
+    document.getElementById("ambience").value = audioSettings.ambience;
+    document.getElementById("sfx").value = audioSettings.sfx;
 }
+
+/* LIVE SETTINGS */
+document.getElementById("music").oninput = (e) => {
+    audioSettings.music = e.target.value;
+    menuMusic.volume = audioSettings.music;
+    sceneMusic.volume = audioSettings.music;
+};
+
+document.getElementById("ambience").oninput = (e) => {
+    audioSettings.ambience = e.target.value;
+};
+
+document.getElementById("sfx").oninput = (e) => {
+    audioSettings.sfx = e.target.value;
+};
+
+document.getElementById("closeSettings").onclick = () => {
+    document.getElementById("settingsPanel").style.display = "none";
+};
 
 /* ================= START GAME ================= */
 function startGame() {
@@ -275,143 +337,6 @@ function startGame() {
 
     }, 2000);
 }
-
-/* ================= SETTINGS ================= */
-function openSettings() {
-    alert("Settings system can be upgraded into full slider UI later.");
-}
-
-/* ================= VN SYSTEM ================= */
-
-const characters = {
-    "Vin": { color: "#4da6ff" },
-    "Niña": { color: "#ffb6c1" }
-};
-
-const gameData = {
-    scene1: {
-        background: "scene 1 bg.gif",
-        dialogues: [
-            {
-                character: "Niña",
-                text: "Pogi lagi kaayo si Ezra noh?",
-                choices: [
-                    {
-                        text: "Sobra ka pogi.",
-                        reply: {
-                            character: "Vin",
-                            text: "Of course. No debate."
-                        }
-                    },
-                    {
-                        text: "Ganii.",
-                        reply: {
-                            character: "Vin",
-                            text: "True. That’s just facts."
-                        }
-                    }
-                ]
-            }
-        ]
-    }
-};
-
-let currentScene = "scene1";
-let dialogueIndex = 0;
-let state = "dialogue";
-let pendingChoices = null;
-let pendingReply = null;
-
-const bg = document.getElementById("background");
-const textBox = document.getElementById("text");
-const nameBox = document.getElementById("name-box");
-const choicesDiv = document.getElementById("choices");
-
-/* LOAD SCENE */
-function loadScene(sceneName) {
-    currentScene = sceneName;
-    dialogueIndex = 0;
-    bg.src = gameData[sceneName].background;
-    nextDialogue();
-}
-
-/* TYPE TEXT */
-function typeText(text, i = 0) {
-    if (i < text.length) {
-        textBox.innerHTML += text.charAt(i);
-        setTimeout(() => typeText(text, i + 1), 20);
-    }
-}
-
-/* SHOW DIALOGUE */
-function showDialogue(d) {
-    textBox.innerHTML = "";
-    nameBox.innerText = d.character;
-    nameBox.style.color = characters[d.character]?.color || "white";
-    typeText(d.text);
-}
-
-/* FLOW */
-function nextDialogue() {
-
-    if (state === "reply" && pendingReply) {
-        state = "dialogue";
-        showDialogue(pendingReply);
-        pendingReply = null;
-        return;
-    }
-
-    const scene = gameData[currentScene];
-    const dialogue = scene.dialogues[dialogueIndex];
-
-    if (!dialogue) return;
-
-    showDialogue(dialogue);
-
-    if (dialogue.choices) {
-        pendingChoices = dialogue.choices;
-        state = "choices";
-    }
-}
-
-/* CHOICES */
-function showChoices(choices) {
-    choicesDiv.innerHTML = "";
-    choicesDiv.style.display = "block";
-
-    choices.forEach(c => {
-        const btn = document.createElement("div");
-        btn.className = "choice";
-        btn.innerText = c.text;
-
-        btn.onclick = (e) => {
-            e.stopPropagation();
-
-            choicesDiv.style.display = "none";
-
-            showDialogue({
-                character: "Vin",
-                text: c.text
-            });
-
-            pendingReply = c.reply;
-            state = "reply";
-        };
-
-        choicesDiv.appendChild(btn);
-    });
-}
-
-/* CLICK ANYWHERE */
-document.addEventListener("click", () => {
-    if (state === "choices" && pendingChoices) {
-        showChoices(pendingChoices);
-        pendingChoices = null;
-        return;
-    }
-
-    nextDialogue();
-});
 
 </script>
 
