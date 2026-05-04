@@ -135,16 +135,16 @@ const characters = {
 };
 
 /* =========================
-   GAME DATA (FIXED)
+   GAME DATA
 ========================= */
 const gameData = {
     scene1: {
         background: "bg_classroom.png",
         dialogues: [
             {
-                character: "Niña",   // ✅ FIXED (was Vin)
+                character: "Niña",
                 position: "left",
-                sprite: "char_vin.png",
+                sprite: "char_nina.png",
                 text: "Pogi lagi kaayo si Ezra noh?",
                 choices: [
                     {
@@ -168,7 +168,7 @@ const gameData = {
             {
                 character: "Niña",
                 position: "left",
-                sprite: "char_vin.png",
+                sprite: "char_nina.png",
                 text: "Faxxx Eyyyy."
             }
         ]
@@ -192,6 +192,7 @@ const gameData = {
 ========================= */
 let currentScene = "scene1";
 let dialogueIndex = 0;
+let pendingScene = null;
 
 let vars = {
     friendship: 0
@@ -213,21 +214,18 @@ const chars = {
 };
 
 /* =========================
-   SCENE LOADER (STABLE)
+   FUNCTIONS
 ========================= */
 function loadScene(sceneName) {
     currentScene = sceneName;
     dialogueIndex = 0;
 
     const scene = gameData[sceneName];
-
-    // smooth + consistent update
     bg.src = scene.background;
 
     nextDialogue();
 }
 
-/* CHARACTER DISPLAY */
 function showCharacter(position, sprite) {
     for (let pos in chars) {
         chars[pos].style.display = "none";
@@ -240,7 +238,6 @@ function showCharacter(position, sprite) {
     }
 }
 
-/* TYPE EFFECT */
 function typeText(text, i = 0) {
     if (i < text.length) {
         textBox.innerHTML += text.charAt(i);
@@ -248,8 +245,16 @@ function typeText(text, i = 0) {
     }
 }
 
-/* DIALOGUE FLOW */
 function nextDialogue() {
+
+    // 🔥 Handle delayed scene switch
+    if (pendingScene) {
+        const next = pendingScene;
+        pendingScene = null;
+        loadScene(next);
+        return;
+    }
+
     const scene = gameData[currentScene];
     const dialogue = scene.dialogues[dialogueIndex];
 
@@ -268,7 +273,6 @@ function nextDialogue() {
     }
 }
 
-/* CHOICES */
 function showChoices(choices) {
     choicesDiv.innerHTML = "";
     choicesDiv.style.display = "block";
@@ -281,29 +285,32 @@ function showChoices(choices) {
 
         btn.onclick = () => {
             if (choice.effect) choice.effect();
+
             choicesDiv.style.display = "none";
             dialogueBox.style.pointerEvents = "auto";
 
-            // keeps visuals stable after selection
-            loadScene(choice.next);
+            // ✅ SHOW PLAYER RESPONSE FIRST
+            textBox.innerHTML = "";
+            nameBox.innerText = "Vin";
+            nameBox.style.color = characters["Vin"].color;
+
+            typeText(choice.text);
+
+            pendingScene = choice.next;
         };
 
         choicesDiv.appendChild(btn);
     });
 }
 
-/* CLICK TO CONTINUE */
 dialogueBox.addEventListener("click", () => {
     const scene = gameData[currentScene];
     const dialogue = scene.dialogues[dialogueIndex];
 
-    if (dialogue.choices) return;
+    if (dialogue && dialogue.choices) return;
 
     dialogueIndex++;
-
-    if (dialogueIndex < scene.dialogues.length) {
-        nextDialogue();
-    }
+    nextDialogue();
 });
 
 /* START */
