@@ -6,33 +6,38 @@
 
 <style>
 
-/* (same styles as your last working version — shortened here for clarity) */
+/* ================= FONTS ================= */
+@font-face {
+    font-family: 'ThisAppeal';
+    src: url('ThisAppeal-FreeDemo.ttf') format('truetype');
+}
 
+@font-face {
+    font-family: 'CenturyGothic';
+    src: url('centurygothic.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'DiarioDeAndy';
+    src: url('DiarioDeAndy-L3ADy.otf') format('opentype');
+}
+
+/* ================= BASE ================= */
 body {
     margin: 0;
     background: black;
     overflow: hidden;
+    height: 100vh;
 }
 
-/* FADE */
-#fade {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: black;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 1s ease;
-    z-index: 999;
-}
-
+/* ================= SCREENS ================= */
 .screen {
     position: absolute;
     width: 100%;
     height: 100%;
 }
 
-/* MENU */
+/* ================= MENU ================= */
 #menuBg {
     width: 100%;
     height: 100%;
@@ -43,9 +48,10 @@ body {
     position: absolute;
     top: 40px;
     left: 40px;
+    font-family: 'ThisAppeal';
     font-size: 90px;
-    font-family: sans-serif;
     color: black;
+    text-transform: uppercase;
 }
 
 #menu {
@@ -58,12 +64,28 @@ body {
 }
 
 .option {
+    font-family: 'CenturyGothic';
     font-size: 28px;
+    color: black;
     cursor: pointer;
 }
 
-/* GAME */
-#gameScreen { display: none; }
+/* ================= FADE ================= */
+#fade {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+    z-index: 999;
+}
+
+/* ================= GAME ================= */
+#gameScreen {
+    display: none;
+}
 
 #game {
     width: 960px;
@@ -72,6 +94,8 @@ body {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+    overflow: hidden;
+    font-family: 'DiarioDeAndy', Arial;
 }
 
 #background {
@@ -80,6 +104,7 @@ body {
     height: 100%;
 }
 
+/* CHARACTERS */
 .character {
     position: absolute;
     bottom: 40px;
@@ -90,6 +115,7 @@ body {
 .left { left: 30px; }
 .right { right: 30px; }
 
+/* DIALOGUE */
 #dialogue-box {
     position: absolute;
     bottom: 20px;
@@ -106,6 +132,7 @@ body {
     top: -25px;
     left: 15px;
     font-weight: bold;
+    padding: 5px 10px;
 }
 
 #text {
@@ -113,6 +140,7 @@ body {
     margin-top: 10px;
 }
 
+/* CHOICES */
 #choices {
     position: absolute;
     bottom: 160px;
@@ -157,8 +185,8 @@ body {
 
         <img id="background" src="scene 1 bg.gif">
 
-        <img id="char-left" class="character left" src="char_vin.png">
-        <img id="char-right" class="character right" src="char_nina_placeholder.png">
+        <img class="character left" src="char_vin.png">
+        <img class="character right" src="char_nina_placeholder.png">
 
         <div id="choices"></div>
 
@@ -170,56 +198,68 @@ body {
     </div>
 </div>
 
-<!-- ================= MUSIC ================= -->
+<!-- ================= AUDIO ================= -->
 <audio id="menuMusic" src="menu.mp3" loop></audio>
 <audio id="sceneMusic" src="scene1.mp3" loop></audio>
 
 <script>
 
-/* ================= MUSIC CONTROL ================= */
+/* ================= FADE AUDIO SYSTEM ================= */
+function fadeAudio(audio, targetVolume, duration, callback) {
+    const step = 50;
+    const steps = duration / step;
+    const change = (targetVolume - audio.volume) / steps;
+
+    let count = 0;
+
+    const interval = setInterval(() => {
+        audio.volume = Math.max(0, Math.min(1, audio.volume + change));
+        count++;
+
+        if (count >= steps) {
+            clearInterval(interval);
+            audio.volume = targetVolume;
+            if (callback) callback();
+        }
+    }, step);
+}
+
+/* ================= MUSIC ================= */
 const menuMusic = document.getElementById("menuMusic");
 const sceneMusic = document.getElementById("sceneMusic");
 
-function playMenuMusic() {
-    sceneMusic.pause();
-    sceneMusic.currentTime = 0;
-
+/* START MENU MUSIC */
+window.onload = () => {
     menuMusic.volume = 0.6;
     menuMusic.play();
-}
-
-function playSceneMusic() {
-    menuMusic.pause();
-    menuMusic.currentTime = 0;
-
-    sceneMusic.volume = 0.6;
-    sceneMusic.play();
-}
-
-/* ================= START MENU MUSIC ================= */
-window.onload = () => {
-    playMenuMusic();
 };
 
-/* ================= FADE TRANSITION ================= */
-function fadeToGame() {
+/* ================= START GAME ================= */
+function startGame() {
     const fade = document.getElementById("fade");
     fade.style.opacity = 1;
+
+    // fade out menu music
+    fadeAudio(menuMusic, 0, 1000, () => {
+        menuMusic.pause();
+        menuMusic.currentTime = 0;
+    });
 
     setTimeout(() => {
         document.getElementById("menuScreen").style.display = "none";
         document.getElementById("gameScreen").style.display = "block";
 
-        playSceneMusic(); // 🎵 switch music here
         loadScene("scene1");
 
-        fade.style.opacity = 0;
-    }, 2000);
-}
+        // start scene music
+        sceneMusic.volume = 0;
+        sceneMusic.play();
 
-/* ================= MENU ================= */
-function startGame() {
-    fadeToGame();
+        fadeAudio(sceneMusic, 0.6, 1500);
+
+        fade.style.opacity = 0;
+
+    }, 2000);
 }
 
 function openSettings() {
@@ -267,6 +307,7 @@ let state = "dialogue";
 let pendingChoices = null;
 let pendingReply = null;
 
+/* ELEMENTS */
 const bg = document.getElementById("background");
 const textBox = document.getElementById("text");
 const nameBox = document.getElementById("name-box");
@@ -349,7 +390,6 @@ function showChoices(choices) {
 
 /* CLICK */
 document.addEventListener("click", () => {
-
     if (state === "choices" && pendingChoices) {
         showChoices(pendingChoices);
         pendingChoices = null;
