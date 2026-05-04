@@ -204,13 +204,30 @@ body {
 <script>
 
 /* ================= AUDIO SETTINGS ================= */
-
 let audioSettings = {
     music: 0.6,
     ambience: 0.4,
     sfx: 0.7
 };
 
+const menuMusic = document.getElementById("menuMusic");
+const sceneMusic = document.getElementById("sceneMusic");
+
+let musicStarted = false;
+
+/* ================= SAFE MUSIC START ================= */
+function startMenuMusic() {
+    if (musicStarted) return;
+
+    menuMusic.volume = audioSettings.music;
+    menuMusic.play().catch(() => {});
+    musicStarted = true;
+}
+
+/* start music on first user interaction */
+document.addEventListener("click", startMenuMusic, { once: true });
+
+/* ================= APPLY VOLUME ================= */
 function applyMusicVolume() {
     menuMusic.volume = audioSettings.music;
     sceneMusic.volume = audioSettings.music;
@@ -236,16 +253,6 @@ function fadeAudio(audio, targetVolume, duration, callback) {
     }, step);
 }
 
-/* ================= MUSIC ================= */
-const menuMusic = document.getElementById("menuMusic");
-const sceneMusic = document.getElementById("sceneMusic");
-
-/* START MENU MUSIC */
-window.onload = () => {
-    menuMusic.volume = audioSettings.music;
-    menuMusic.play();
-};
-
 /* ================= SETTINGS ================= */
 function openSettings() {
 
@@ -264,17 +271,17 @@ function openSettings() {
     panel.innerHTML = `
         <h3>SETTINGS</h3>
 
-        <label>Music</label>
+        <label>Music</label><br>
         <input id="music" type="range" min="0" max="1" step="0.01" value="${audioSettings.music}">
 
         <br><br>
 
-        <label>Ambience</label>
+        <label>Ambience</label><br>
         <input id="ambience" type="range" min="0" max="1" step="0.01" value="${audioSettings.ambience}">
 
         <br><br>
 
-        <label>SFX</label>
+        <label>SFX</label><br>
         <input id="sfx" type="range" min="0" max="1" step="0.01" value="${audioSettings.sfx}">
 
         <br><br>
@@ -306,10 +313,8 @@ function startGame() {
     const fade = document.getElementById("fade");
     fade.style.opacity = 1;
 
-    fadeAudio(menuMusic, 0, 1000, () => {
-        menuMusic.pause();
-        menuMusic.currentTime = 0;
-    });
+    menuMusic.pause();
+    menuMusic.currentTime = 0;
 
     setTimeout(() => {
 
@@ -369,7 +374,6 @@ let state = "dialogue";
 let pendingChoices = null;
 let pendingReply = null;
 
-/* ELEMENTS */
 const bg = document.getElementById("background");
 const textBox = document.getElementById("text");
 const nameBox = document.getElementById("name-box");
