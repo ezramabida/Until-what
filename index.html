@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Visual Novel</title>
+
+<style>
+
+@font-face {
+    font-family: 'DiarioDeAndy';
+    src: url('DiarioDeAndy-L3ADy.otf') format('opentype');
+}
+
+body {
+    margin: 0;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'DiarioDeAndy', Arial, sans-serif;
+}
+
+#game {
+    width: 960px;
+    height: 540px;
+    position: relative;
+    overflow: hidden;
+}
+
+#background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* CHARACTERS */
+.character {
+    position: absolute;
+    bottom: 40px;
+    width: 320px;
+    height: 320px;
+    object-fit: cover;
+    display: none;
+}
+
+.left { left: 30px; }
+.center { left: 50%; transform: translateX(-50%); }
+.right { right: 30px; }
+
+/* DIALOGUE */
+#dialogue-box {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 140px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+#name-box {
+    position: absolute;
+    top: -25px;
+    left: 15px;
+    padding: 5px 10px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.8);
+    font-size: 16px;
+}
+
+#text {
+    color: white;
+    margin-top: 10px;
+    font-size: 18px;
+    line-height: 1.4;
+}
+
+/* CHOICES */
+#choices {
+    position: absolute;
+    bottom: 150px;
+    width: 100%;
+    display: none;
+    text-align: center;
+}
+
+.choice {
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 10px 14px;
+    margin: 8px auto;
+    width: 38%;
+    min-width: 240px;
+    max-width: 360px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s;
+    font-size: 16px;
+}
+
+.choice:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <img id="background" src="bg_classroom.png">
+
+    <img id="char-left" class="character left">
+    <img id="char-center" class="character center">
+    <img id="char-right" class="character right">
+
+    <div id="choices"></div>
+
+    <div id="dialogue-box">
+        <div id="name-box"></div>
+        <div id="text"></div>
+    </div>
+
+</div>
+
+<script>
+
+const characters = {
+    "Vin": { color: "#4da6ff" },
+    "Niña": { color: "#ffb6c1" }
+};
+
+/* =========================
+   GAME DATA (FIXED)
+========================= */
+const gameData = {
+    scene1: {
+        background: "bg_classroom.png",
+        dialogues: [
+            {
+                character: "Niña",   // ✅ FIXED (was Vin)
+                position: "left",
+                sprite: "char_vin.png",
+                text: "Pogi lagi kaayo si Ezra noh?",
+                choices: [
+                    {
+                        text: "Sobra ka pogi.",
+                        next: "scene2",
+                        effect: () => vars.friendship += 1
+                    },
+                    {
+                        text: "Ganii.",
+                        next: "scene3",
+                        effect: () => vars.friendship -= 1
+                    }
+                ]
+            }
+        ]
+    },
+
+    scene2: {
+        background: "bg_classroom.png",
+        dialogues: [
+            {
+                character: "Niña",
+                position: "left",
+                sprite: "char_vin.png",
+                text: "Faxxx Eyyyy."
+            }
+        ]
+    },
+
+    scene3: {
+        background: "bg_school.png",
+        dialogues: [
+            {
+                character: "Niña",
+                position: "right",
+                sprite: "char_nina.png",
+                text: "You can tell me what's wrong..."
+            }
+        ]
+    }
+};
+
+/* =========================
+   VARIABLES
+========================= */
+let currentScene = "scene1";
+let dialogueIndex = 0;
+
+let vars = {
+    friendship: 0
+};
+
+/* =========================
+   ELEMENTS
+========================= */
+const bg = document.getElementById("background");
+const textBox = document.getElementById("text");
+const nameBox = document.getElementById("name-box");
+const dialogueBox = document.getElementById("dialogue-box");
+const choicesDiv = document.getElementById("choices");
+
+const chars = {
+    left: document.getElementById("char-left"),
+    center: document.getElementById("char-center"),
+    right: document.getElementById("char-right")
+};
+
+/* =========================
+   SCENE LOADER (STABLE)
+========================= */
+function loadScene(sceneName) {
+    currentScene = sceneName;
+    dialogueIndex = 0;
+
+    const scene = gameData[sceneName];
+
+    // smooth + consistent update
+    bg.src = scene.background;
+
+    nextDialogue();
+}
+
+/* CHARACTER DISPLAY */
+function showCharacter(position, sprite) {
+    for (let pos in chars) {
+        chars[pos].style.display = "none";
+    }
+
+    if (position && sprite) {
+        const char = chars[position];
+        char.src = sprite;
+        char.style.display = "block";
+    }
+}
+
+/* TYPE EFFECT */
+function typeText(text, i = 0) {
+    if (i < text.length) {
+        textBox.innerHTML += text.charAt(i);
+        setTimeout(() => typeText(text, i + 1), 20);
+    }
+}
+
+/* DIALOGUE FLOW */
+function nextDialogue() {
+    const scene = gameData[currentScene];
+    const dialogue = scene.dialogues[dialogueIndex];
+
+    if (!dialogue) return;
+
+    textBox.innerHTML = "";
+
+    nameBox.innerText = dialogue.character || "";
+    nameBox.style.color = characters[dialogue.character]?.color || "white";
+
+    showCharacter(dialogue.position, dialogue.sprite);
+    typeText(dialogue.text);
+
+    if (dialogue.choices) {
+        showChoices(dialogue.choices);
+    }
+}
+
+/* CHOICES */
+function showChoices(choices) {
+    choicesDiv.innerHTML = "";
+    choicesDiv.style.display = "block";
+    dialogueBox.style.pointerEvents = "none";
+
+    choices.forEach(choice => {
+        const btn = document.createElement("div");
+        btn.className = "choice";
+        btn.innerText = choice.text;
+
+        btn.onclick = () => {
+            if (choice.effect) choice.effect();
+            choicesDiv.style.display = "none";
+            dialogueBox.style.pointerEvents = "auto";
+
+            // keeps visuals stable after selection
+            loadScene(choice.next);
+        };
+
+        choicesDiv.appendChild(btn);
+    });
+}
+
+/* CLICK TO CONTINUE */
+dialogueBox.addEventListener("click", () => {
+    const scene = gameData[currentScene];
+    const dialogue = scene.dialogues[dialogueIndex];
+
+    if (dialogue.choices) return;
+
+    dialogueIndex++;
+
+    if (dialogueIndex < scene.dialogues.length) {
+        nextDialogue();
+    }
+});
+
+/* START */
+loadScene("scene1");
+
+</script>
+
+</body>
+</html>
